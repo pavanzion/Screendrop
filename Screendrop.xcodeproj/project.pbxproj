@@ -282,10 +282,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Screendrop/Vendor/DeepFilterNet/lib",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 0.39.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.fayazahmed.Screendrop;
@@ -323,10 +319,6 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Screendrop/Vendor/DeepFilterNet/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 0.39.1;
@@ -429,10 +421,6 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Screendrop/Vendor/DeepFilterNet/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 0.39.1;
