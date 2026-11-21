@@ -243,7 +243,14 @@ final class ScreenRecordingManager {
                         deviceID: cameraID,
                         displayID: targetDisplayID
                     )
-                    guard isStarting(session: session) else { return }
+                    guard isStarting(session: session) else {
+                        // Stopped while the camera was starting: the finish
+                        // path saw no camera yet, so release it here.
+                        if cameraStarted {
+                            await CameraRecordingManager.shared.cancel()
+                        }
+                        return
+                    }
                     if !cameraStarted {
                         Self.presentInputWarnings([
                             "The selected camera could not start. The screen and selected audio will still be recorded."
