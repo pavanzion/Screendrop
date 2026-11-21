@@ -71,7 +71,7 @@ Activity Monitor's figure is the heap's high-water mark: malloc keeps the pages 
 
 ## Conventions
 
-- **No SPM packages or external dependencies.** The project uses only Apple frameworks (SwiftUI, AppKit, ScreenCaptureKit, CoreGraphics, CoreImage, ImageIO, Carbon).
+- **Two Swift packages only:** Sparkle (updates) and DockProgress (Dock icon progress). Everything else uses Apple frameworks (SwiftUI, AppKit, ScreenCaptureKit, CoreGraphics, CoreImage, ImageIO, Carbon). Don't add more dependencies.
 - **`@Observable` macro** (Observation framework) is used for state - not `ObservableObject`/`@Published`.
 - **App sandbox is disabled** (`ENABLE_APP_SANDBOX = NO`) - the app needs screen capture permissions and direct filesystem access.
 - Screenshots are saved as lossless PNG to `NSTemporaryDirectory()` first, then optionally compressed to JPEG on export.
