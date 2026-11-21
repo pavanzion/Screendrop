@@ -37,6 +37,10 @@ struct AnnotationWatermarkOverlay: View {
 
     var body: some View {
         Canvas { context, size in
+            // A zero-height canvas would make `diagonal / spacingY` NaN or
+            // infinite, and converting that to Int traps. The export path
+            // has the same guard.
+            guard size.width > 1, size.height > 1 else { return }
             let rows = max(2, Int(round(settings.density)))
             let spacingY = size.height / CGFloat(rows)
             let spacingX = max(1, spacingY * 2.2)
