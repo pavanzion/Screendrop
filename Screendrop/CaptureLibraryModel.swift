@@ -403,8 +403,12 @@ nonisolated enum CaptureLibraryScanner {
                 thumbnailKey: "\(fileURL.path):\(modified.timeIntervalSince1970)"
             ))
         }
+        // Item IDs key the grid's lookups, which trap on duplicates; a
+        // history file listing one row twice must not crash the Library.
+        var seenRows: Set<UUID> = []
         for row in history where row.sessionPath == nil {
             guard !Task.isCancelled else { return [] }
+            guard seenRows.insert(row.id).inserted else { continue }
             let url = historyDirectory.appendingPathComponent(row.fileName)
             guard let modified = modificationDate(of: url) else { continue }
             entries.append(CaptureLibraryItem(
