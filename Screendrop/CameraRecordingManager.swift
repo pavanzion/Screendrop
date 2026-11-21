@@ -543,6 +543,17 @@ nonisolated private final class CameraMovieWriter: @unchecked Sendable {
                     )
                 }
 
+                // A failed writer raises if asked to finish (same guard as
+                // the screen writer); the fragments on disk are unusable here.
+                guard assetWriter.status == .writing else {
+                    if let outputURL = self.outputURL {
+                        try? FileManager.default.removeItem(at: outputURL)
+                    }
+                    self.reset()
+                    continuation.resume(returning: nil)
+                    return
+                }
+
                 self.videoInput?.markAsFinished()
                 assetWriter.finishWriting {
                     let succeeded = assetWriter.status == .completed
@@ -563,7 +574,9 @@ nonisolated private final class CameraMovieWriter: @unchecked Sendable {
                     continuation.resume()
                     return
                 }
-                assetWriter?.cancelWriting()
+                if let assetWriter, assetWriter.status == .writing {
+                    assetWriter.cancelWriting()
+                }
                 if let outputURL {
                     try? FileManager.default.removeItem(at: outputURL)
                 }
