@@ -188,6 +188,19 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
         }
     }
 
+    /// Lets the pumps see a failed writer: its inputs then never become
+    /// ready again, so waiting on them alone would spin forever.
+    nonisolated private final class WriterWatch: @unchecked Sendable {
+        private let writer: AVAssetWriter
+
+        init(_ writer: AVAssetWriter) {
+            self.writer = writer
+        }
+
+        var hasFailed: Bool { writer.status == .failed }
+        var error: Error? { writer.error }
+    }
+
     /// `@concurrent` keeps the frame loop off the caller's actor. Callers
     /// are main-actor models, and approachable concurrency would otherwise
     /// run this nonisolated async work - blocking reader calls included -
@@ -417,6 +430,7 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
 
         let screenAudioOutput = audioOutput
         let writerAudioInput = audioInput
+        let writerWatch = WriterWatch(writer)
 
         do {
             async let videoDone: Void = pumpVideo(
@@ -429,12 +443,14 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
                 clipTimeline: clipTimeline,
                 timing: timing,
                 cancelFlag: cancelFlag,
+                writerWatch: writerWatch,
                 progress: progress
             )
             async let audioDone: Void = pumpAudio(
                 output: screenAudioOutput,
                 input: writerAudioInput,
-                cancelFlag: cancelFlag
+                cancelFlag: cancelFlag,
+                writerWatch: writerWatch
             )
             _ = try await (videoDone, audioDone)
         } catch {
@@ -474,6 +490,7 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
         clipTimeline: RecordingClipTimeline,
         timing: RecordingExportTiming,
         cancelFlag: CancelFlag,
+        writerWatch: WriterWatch,
         progress: @escaping @Sendable (Double) -> Void
     ) async throws {
         // Render on a fixed output clock, not per source frame. Screen
@@ -526,6 +543,7 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
             let waitStart = CFAbsoluteTimeGetCurrent()
             while !input.isReadyForMoreMediaData {
                 if cancelFlag.isCancelled { throw ExportError.cancelled }
+                if writerWatch.hasFailed { throw ExportError.writerFailed(writerWatch.error) }
                 try await Task.sleep(nanoseconds: 2_000_000)
             }
             writerWaitSeconds += CFAbsoluteTimeGetCurrent() - waitStart
@@ -606,7 +624,8 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
     private func pumpAudio(
         output: AVAssetReaderAudioMixOutput?,
         input: AVAssetWriterInput?,
-        cancelFlag: CancelFlag
+        cancelFlag: CancelFlag,
+        writerWatch: WriterWatch
     ) async throws {
         guard let output, let input else { return }
 
@@ -614,6 +633,7 @@ nonisolated final class RecordingStudioExporter: @unchecked Sendable {
             if cancelFlag.isCancelled { throw ExportError.cancelled }
             while !input.isReadyForMoreMediaData {
                 if cancelFlag.isCancelled { throw ExportError.cancelled }
+                if writerWatch.hasFailed { throw ExportError.writerFailed(writerWatch.error) }
                 try await Task.sleep(nanoseconds: 2_000_000)
             }
             if !input.append(sampleBuffer) {
