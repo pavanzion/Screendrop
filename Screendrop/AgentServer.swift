@@ -198,6 +198,9 @@ nonisolated final class AgentConnection: @unchecked Sendable {
         readSource?.cancel()
         readSource = nil
         onClose?()
+        // The handlers hold the session, which holds this connection.
+        onMessage = nil
+        onClose = nil
     }
 }
 
