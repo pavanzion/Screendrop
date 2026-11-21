@@ -383,6 +383,13 @@ nonisolated struct CaptureFeaturePrintPack {
         guard magic == Self.magic, dimension > 0 else { return }
         self.dimension = dimension
         let size = recordSize
+        // A pack cut off mid-record would misalign every record appended
+        // after it; drop it and let it be rebuilt from the archives.
+        guard (mapped.count - Self.headerSize) % size == 0 else {
+            self.dimension = 0
+            try? FileManager.default.removeItem(at: url)
+            return
+        }
         mapped.withUnsafeBytes { bytes in
             var offset = Self.headerSize
             while offset + size <= bytes.count {
