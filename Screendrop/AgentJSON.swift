@@ -69,7 +69,8 @@ nonisolated enum JSONValue: Codable, Sendable, Hashable {
     }
 
     var intValue: Int? {
-        doubleValue.map { Int($0) }
+        // Int(_:) traps on values out of range (e.g. 1e300 from a client).
+        doubleValue.flatMap { Int(exactly: $0.rounded(.towardZero)) }
     }
 
     var boolValue: Bool? {
