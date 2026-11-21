@@ -264,7 +264,12 @@ final class ScreenRecordingManager {
                 // Camera setup and every permission prompt complete before the
                 // screen stream begins, so setup UI is never baked into video.
                 try await capture.startCapture(filter: target.filter, configuration: target.configuration)
-                guard isStarting(session: session) else { return }
+                guard isStarting(session: session) else {
+                    // Stopped while the stream was starting: the finish path's
+                    // stopCapture ran before the stream existed, so stop it here.
+                    try? await capture.stopCapture()
+                    return
+                }
 
                 manifest = CaptureManifest()
                 manifest.pixelWidth = target.width
