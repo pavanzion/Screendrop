@@ -467,7 +467,9 @@ nonisolated struct CaptureFeaturePrintPack {
         for offset in offsets.values {
             bytes.append(data[(offset - Self.keySize)..<(offset + recordSize - Self.keySize)])
         }
-        try? bytes.write(to: url, options: .atomic)
+        // Reopening a pack that couldn't be rewritten would compact it again,
+        // without end; keep the mapped one until a write succeeds.
+        guard (try? bytes.write(to: url, options: .atomic)) != nil else { return }
         close()
         open()
     }
