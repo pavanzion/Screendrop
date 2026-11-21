@@ -76,6 +76,12 @@ final class RecordingBarPresenter {
     }
 
     func showPicker() {
+        // While a recording runs the bar holds its Stop/Pause controls;
+        // swapping in the picker would leave the session with no controls.
+        if ScreenRecordingManager.shared.isActive {
+            panel?.orderFrontRegardless()
+            return
+        }
         let panel = panel ?? makePanel()
         PreviewWindowCaptureExclusion.shared.register(window: panel)
         Task {
